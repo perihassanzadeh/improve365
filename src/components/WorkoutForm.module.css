@@ -1,0 +1,31 @@
+.form {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius);
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  box-shadow: var(--shadow-medium);
+}
+.exerciseRow {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+.addBtn, .submitBtn {
+  background: var(--accent-primary);
+  color: var(--text-heading);
+  border: none;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-xs) var(--spacing-md);
+  cursor: pointer;
+  margin-top: var(--spacing-xs);
+  box-shadow: var(--shadow-light);
+  font-weight: 600;
+  transition: background var(--transition), color var(--transition);
+}
+.addBtn:hover, .submitBtn:hover {
+  background: var(--accent-secondary);
+  color: var(--text-heading);
+} 

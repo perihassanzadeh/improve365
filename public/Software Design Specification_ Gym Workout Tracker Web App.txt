@@ -1,0 +1,65 @@
+﻿Software Design Specification: Gym Workout Tracker Web App
+1. Introduction
+This document details the design and architecture for a web application aimed at helping users track their daily gym workouts and nutrition. The application will provide a user-friendly interface to log activities, visualize progress, and manage personal metrics. Designed with modularity in mind, the system will allow for future expansion of features.
+2. Goals and Objectives
+* Primary Goal: To provide a reliable and intuitive platform for users to track their daily gym workouts and nutritional intake.
+* User Engagement: Encourage consistent tracking through features like streaks and historical data visualization.
+* Scalability: Design a system that can easily accommodate new features and increased user loads.
+* Maintainability: Develop clean, well-structured code adhering to modern web development best practices.
+* User Experience: Offer a seamless and visually appealing experience with a consistent dark mode theme.
+3. User Stories
+To better understand the user's needs, here are some key user stories:
+* As a user, I want to see my current tracking streak on the main screen so I can stay motivated.
+* As a user, I want to easily access my nutrition history, exercise history, and profile from a single menu.
+* As a user, I want to view a summary of my past nutrition entries and drill down for more details.
+* As a user, I want to view a summary of my past exercise entries and drill down for more details.
+* As a user, I want to see my personal information, tracking streak, join date, and current metrics on my profile.
+* As a user, I want the application to be in dark mode by default, with an option to toggle it off if I prefer.
+4. Features
+4.1 Core Functionality
+* Workout Tracking: Users can log details of their daily gym workouts.
+* Nutrition Tracking: Users can log details of their daily nutritional intake.
+* Streak Display: Main dashboard prominently displays the user's current consecutive tracking streak (workouts or nutrition).
+4.2 Navigation and History
+* Top-Right Options Tab: A clickable button in the top-right corner reveals a tab with the following navigation options:
+   * Nutrition History: Displays a chronological list of all days with recorded nutrition. Each day is clickable to view broader information.
+   * Exercise History: Displays a chronological list of all days with recorded workouts. Each day is clickable to view broader information.
+   * Profile: Navigates to the user's profile page.
+4.3 User Profile
+* User Details: Displays the user's name, current tracking streak, and account join date.
+* Metrics: Shows current weight and height.
+* Profile Picture: Allows for the display of a user-uploaded profile picture.
+4.4 User Interface (UI) and Experience (UX)
+* Dark Mode Theme: The entire web application will adhere to a dark mode theme across all components by default.
+* Dark Mode Toggle: A button at the top of every page will allow users to toggle dark mode on/off.
+* Placeholder Functionality: All clickable buttons will have a placeholder for future routing if the full functionality isn't yet implemented.
+5. Technical Architecture
+The application will follow standard best practices for React and full-stack development, emphasizing a modular and scalable architecture.
+5.1 Frontend (Client-Side)
+* Technology Stack:
+   * React: For building the user interface.
+   * React Router: For client-side routing.
+   * State Management: (e.g., React Context API or Redux for more complex state)
+   * Styling: (e.g., CSS Modules, Styled Components, or Tailwind CSS for efficient styling and dark mode management)
+* Component-Based Structure: The UI will be broken down into reusable components (e.g., Header, WorkoutForm, NutritionEntry, StreakDisplay, ProfileCard).
+* Theming: Implement a robust theming solution to manage dark/light mode toggling globally.
+* API Integration: Interact with the backend API for data fetching and submission.
+5.2 Backend (Server-Side)
+* Technology Stack: (e.g., Node.js with Express, Python with Flask/Django, Ruby on Rails) - Choice to be finalized during detailed design.
+* Database: (e.g., PostgreSQL, MongoDB, MySQL) - Choice to be finalized based on data structure and scalability needs.
+   * Data Models: Define clear schemas for User, Workout, and NutritionEntry.
+      * User: id, name, email, password_hash, join_date, current_weight, current_height, profile_picture_url, streak_count
+      * Workout: id, user_id, date, time, exercises (array of objects: name, sets, reps, weight), notes
+      * NutritionEntry: id, user_id, date, time, meals (array of objects: name, calories, macronutrients), notes
+* RESTful API: Expose clear and well-documented API endpoints for all frontend interactions (e.g., /api/workouts, /api/nutrition, /api/users).
+* Authentication & Authorization: Implement secure user authentication (e.g., JWT) and authorization to protect user data.
+* Data Validation: Implement server-side validation for all incoming data to ensure integrity.
+5.3 Deployment
+* Platform: (e.g., Vercel/Netlify for frontend, Heroku/AWS EC2/DigitalOcean for backend) - Choice to be finalized.
+* CI/CD: Implement Continuous Integration/Continuous Deployment pipelines for automated testing and deployment.
+6. Data Flow and Interactions
+1. User Login/Registration: Frontend sends credentials to backend, backend authenticates and returns a token.
+2. Main Dashboard Load: Frontend fetches user data (including streak) from the backend.
+3. Workout/Nutrition Logging: User submits data via frontend forms, which is sent to the backend API for storage.
+4. History Retrieval: When a user clicks "Nutrition History" or "Exercise History," the frontend requests relevant data from the backend, which retrieves it from the database and sends it back.
+5. Profile Update: User updates profile information on the frontend, which is sent to the backend for persistence.
