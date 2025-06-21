@@ -20,17 +20,24 @@ const initialState = {
     fat: 80,
     steps: 10000,
     workoutDuration: 60
-  }
+  },
+  loading: false,
+  error: null
 };
 
 // Action types
 const ACTIONS = {
   ADD_NUTRITION: 'ADD_NUTRITION',
   ADD_WORKOUT: 'ADD_WORKOUT',
+  DELETE_NUTRITION: 'DELETE_NUTRITION',
+  DELETE_WORKOUT: 'DELETE_WORKOUT',
   UPDATE_USER: 'UPDATE_USER',
   UPDATE_STREAK: 'UPDATE_STREAK',
   UPDATE_GOALS: 'UPDATE_GOALS',
-  LOAD_DATA: 'LOAD_DATA'
+  LOAD_DATA: 'LOAD_DATA',
+  SET_LOADING: 'SET_LOADING',
+  SET_ERROR: 'SET_ERROR',
+  CLEAR_ERROR: 'CLEAR_ERROR'
 };
 
 // Reducer function
@@ -86,6 +93,36 @@ function appReducer(state, action) {
         ...action.payload
       };
     
+    case ACTIONS.DELETE_NUTRITION:
+      return {
+        ...state,
+        nutritionEntries: state.nutritionEntries.filter(entry => entry.id !== action.payload)
+      };
+    
+    case ACTIONS.DELETE_WORKOUT:
+      return {
+        ...state,
+        workoutEntries: state.workoutEntries.filter(entry => entry.id !== action.payload)
+      };
+    
+    case ACTIONS.SET_LOADING:
+      return {
+        ...state,
+        loading: true
+      };
+    
+    case ACTIONS.SET_ERROR:
+      return {
+        ...state,
+        error: action.payload
+      };
+    
+    case ACTIONS.CLEAR_ERROR:
+      return {
+        ...state,
+        error: null
+      };
+    
     default:
       return state;
   }
@@ -137,6 +174,87 @@ export function AppProvider({ children }) {
     dispatch({ type: ACTIONS.UPDATE_GOALS, payload: goals });
   };
 
+  const deleteNutrition = (id) => {
+    dispatch({ type: ACTIONS.DELETE_NUTRITION, payload: id });
+  };
+
+  const deleteWorkout = (id) => {
+    dispatch({ type: ACTIONS.DELETE_WORKOUT, payload: id });
+  };
+
+  const setLoading = (loading) => {
+    dispatch({ type: ACTIONS.SET_LOADING, payload: loading });
+  };
+
+  const setError = (error) => {
+    dispatch({ type: ACTIONS.SET_ERROR, payload: error });
+  };
+
+  const clearError = () => {
+    dispatch({ type: ACTIONS.CLEAR_ERROR });
+  };
+
+  // Async wrapper functions with loading states
+  const addNutritionAsync = async (nutritionData) => {
+    try {
+      setLoading(true);
+      clearError();
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      addNutrition(nutritionData);
+    } catch (error) {
+      setError('Failed to add nutrition entry. Please try again.');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addWorkoutAsync = async (workoutData) => {
+    try {
+      setLoading(true);
+      clearError();
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      addWorkout(workoutData);
+    } catch (error) {
+      setError('Failed to add workout entry. Please try again.');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteNutritionAsync = async (id) => {
+    try {
+      setLoading(true);
+      clearError();
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      deleteNutrition(id);
+    } catch (error) {
+      setError('Failed to delete nutrition entry. Please try again.');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteWorkoutAsync = async (id) => {
+    try {
+      setLoading(true);
+      clearError();
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      deleteWorkout(id);
+    } catch (error) {
+      setError('Failed to delete workout entry. Please try again.');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Get today's entries
   const getTodayNutrition = () => {
     const today = new Date().toDateString();
@@ -177,9 +295,18 @@ export function AppProvider({ children }) {
     ...state,
     addNutrition,
     addWorkout,
+    addNutritionAsync,
+    addWorkoutAsync,
+    deleteNutrition,
+    deleteWorkout,
+    deleteNutritionAsync,
+    deleteWorkoutAsync,
     updateUser,
     updateStreak,
     updateGoals,
+    setLoading,
+    setError,
+    clearError,
     getTodayNutrition,
     getTodayWorkouts,
     getTodayCalories,

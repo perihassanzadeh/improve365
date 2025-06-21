@@ -19,11 +19,25 @@
 
 .app {
   min-height: 100vh;
-  background: var(--gradient-subtle-bg);
-  color: var(--text-primary);
+  background: var(--bg-primary, #1A1A2E);
+  color: var(--text-primary, #E0E0FF);
   font-family: var(--font-family);
   transition: background var(--transition), color var(--transition);
+  display: flex;
+  flex-direction: column;
 }
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .page {
   max-width: 800px;
   margin: 2rem auto;

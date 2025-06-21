@@ -437,22 +437,29 @@ const QuickAddNutrition = ({ onSubmit }) => {
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fat, setFat] = useState('');
+  const { loading, error, clearError, addNutritionAsync } = useApp();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (meal && calories) {
-      onSubmit({ 
-        meal, 
-        calories: parseInt(calories), 
-        protein: protein ? parseInt(protein) : 0,
-        carbs: carbs ? parseInt(carbs) : 0,
-        fat: fat ? parseInt(fat) : 0
-      });
-      setMeal('');
-      setCalories('');
-      setProtein('');
-      setCarbs('');
-      setFat('');
+      try {
+        await addNutritionAsync({ 
+          meal, 
+          calories: parseInt(calories), 
+          protein: protein ? parseInt(protein) : 0,
+          carbs: carbs ? parseInt(carbs) : 0,
+          fat: fat ? parseInt(fat) : 0
+        });
+        setMeal('');
+        setCalories('');
+        setProtein('');
+        setCarbs('');
+        setFat('');
+        if (onSubmit) onSubmit();
+      } catch (error) {
+        // Error is handled by the context
+        console.error('Failed to add nutrition:', error);
+      }
     }
   };
 
@@ -460,11 +467,13 @@ const QuickAddNutrition = ({ onSubmit }) => {
     <FormContainer>
       <FormFields>
         <FormTitle>Add Nutrition Entry</FormTitle>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
         <InputField 
           placeholder="Meal name" 
           value={meal}
           onChange={(e) => setMeal(e.target.value)}
           required
+          disabled={loading}
         />
         <InputField 
           placeholder="Calories" 
@@ -472,6 +481,7 @@ const QuickAddNutrition = ({ onSubmit }) => {
           value={calories}
           onChange={(e) => setCalories(e.target.value)}
           required
+          disabled={loading}
         />
         <MacroGrid>
           <MacroInput 
@@ -479,24 +489,34 @@ const QuickAddNutrition = ({ onSubmit }) => {
             type="number" 
             value={protein}
             onChange={(e) => setProtein(e.target.value)}
+            disabled={loading}
           />
           <MacroInput 
             placeholder="Carbs (g)" 
             type="number" 
             value={carbs}
             onChange={(e) => setCarbs(e.target.value)}
+            disabled={loading}
           />
           <MacroInput 
             placeholder="Fat (g)" 
             type="number" 
             value={fat}
             onChange={(e) => setFat(e.target.value)}
+            disabled={loading}
           />
         </MacroGrid>
       </FormFields>
-      <SubmitButton onClick={handleSubmit}>
-        Add Nutrition
-      </SubmitButton>
+      {loading ? (
+        <LoadingButton disabled>
+          <LoadingSpinner />
+          Adding...
+        </LoadingButton>
+      ) : (
+        <SubmitButton onClick={handleSubmit}>
+          Add Nutrition
+        </SubmitButton>
+      )}
     </FormContainer>
   );
 };
@@ -506,22 +526,29 @@ const QuickAddStrength = ({ onSubmit }) => {
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
   const [weight, setWeight] = useState('');
+  const { loading, error, clearError, addWorkoutAsync } = useApp();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (exercise && sets && reps && weight) {
-      onSubmit({ 
-        exercise, 
-        type: 'strength',
-        sets: parseInt(sets), 
-        reps: parseInt(reps), 
-        weight: parseInt(weight),
-        duration: 0
-      });
-      setExercise('');
-      setSets('');
-      setReps('');
-      setWeight('');
+      try {
+        await addWorkoutAsync({ 
+          exercise, 
+          type: 'strength',
+          sets: parseInt(sets), 
+          reps: parseInt(reps), 
+          weight: parseInt(weight),
+          duration: 0
+        });
+        setExercise('');
+        setSets('');
+        setReps('');
+        setWeight('');
+        if (onSubmit) onSubmit();
+      } catch (error) {
+        // Error is handled by the context
+        console.error('Failed to add strength workout:', error);
+      }
     }
   };
 
@@ -529,11 +556,13 @@ const QuickAddStrength = ({ onSubmit }) => {
     <FormContainer>
       <FormFields>
         <FormTitle>Add Strength Exercise</FormTitle>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
         <InputField 
           placeholder="Exercise name" 
           value={exercise}
           onChange={(e) => setExercise(e.target.value)}
           required
+          disabled={loading}
         />
         <InputField 
           placeholder="Sets" 
@@ -541,6 +570,7 @@ const QuickAddStrength = ({ onSubmit }) => {
           value={sets}
           onChange={(e) => setSets(e.target.value)}
           required
+          disabled={loading}
         />
         <InputField 
           placeholder="Reps" 
@@ -548,6 +578,7 @@ const QuickAddStrength = ({ onSubmit }) => {
           value={reps}
           onChange={(e) => setReps(e.target.value)}
           required
+          disabled={loading}
         />
         <InputField 
           placeholder="Weight (kg)" 
@@ -555,11 +586,19 @@ const QuickAddStrength = ({ onSubmit }) => {
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
           required
+          disabled={loading}
         />
       </FormFields>
-      <SubmitButton onClick={handleSubmit}>
-        Add Strength
-      </SubmitButton>
+      {loading ? (
+        <LoadingButton disabled>
+          <LoadingSpinner />
+          Adding...
+        </LoadingButton>
+      ) : (
+        <SubmitButton onClick={handleSubmit}>
+          Add Strength
+        </SubmitButton>
+      )}
     </FormContainer>
   );
 };
@@ -568,19 +607,26 @@ const QuickAddCardio = ({ onSubmit }) => {
   const [exercise, setExercise] = useState('');
   const [duration, setDuration] = useState('');
   const [distance, setDistance] = useState('');
+  const { loading, error, clearError, addWorkoutAsync } = useApp();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (exercise && duration) {
-      onSubmit({ 
-        exercise, 
-        type: 'cardio',
-        duration: parseInt(duration), 
-        distance: distance ? parseFloat(distance) : 0
-      });
-      setExercise('');
-      setDuration('');
-      setDistance('');
+      try {
+        await addWorkoutAsync({ 
+          exercise, 
+          type: 'cardio',
+          duration: parseInt(duration), 
+          distance: distance ? parseFloat(distance) : 0
+        });
+        setExercise('');
+        setDuration('');
+        setDistance('');
+        if (onSubmit) onSubmit();
+      } catch (error) {
+        // Error is handled by the context
+        console.error('Failed to add cardio workout:', error);
+      }
     }
   };
 
@@ -588,11 +634,13 @@ const QuickAddCardio = ({ onSubmit }) => {
     <FormContainer>
       <FormFields>
         <FormTitle>Add Cardio Exercise</FormTitle>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
         <InputField 
           placeholder="Exercise name" 
           value={exercise}
           onChange={(e) => setExercise(e.target.value)}
           required
+          disabled={loading}
         />
         <InputField 
           placeholder="Duration (min)" 
@@ -600,6 +648,7 @@ const QuickAddCardio = ({ onSubmit }) => {
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
           required
+          disabled={loading}
         />
         <InputField 
           placeholder="Distance (km) - optional" 
@@ -607,11 +656,19 @@ const QuickAddCardio = ({ onSubmit }) => {
           step="0.1"
           value={distance}
           onChange={(e) => setDistance(e.target.value)}
+          disabled={loading}
         />
       </FormFields>
-      <SubmitButton onClick={handleSubmit}>
-        Add Cardio
-      </SubmitButton>
+      {loading ? (
+        <LoadingButton disabled>
+          <LoadingSpinner />
+          Adding...
+        </LoadingButton>
+      ) : (
+        <SubmitButton onClick={handleSubmit}>
+          Add Cardio
+        </SubmitButton>
+      )}
     </FormContainer>
   );
 };
@@ -749,19 +806,19 @@ const ProgressRingsRow = styled.div`
 `;
 
 const EnhancedDashboard = React.memo(function EnhancedDashboard() {
-  const { 
-    user, 
-    currentStreak, 
-    goals, 
-    getTodayCalories, 
-    getTodayProtein, 
+  const {
+    user,
+    currentStreak,
+    goals,
+    getTodayCalories,
+    getTodayProtein,
     getTodayCarbs,
     getTodayFat,
     getTodayWorkoutDuration,
     getTodayNutrition,
     getTodayWorkouts,
-    addNutrition,
-    addWorkout
+    addNutritionAsync,
+    addWorkoutAsync
   } = useApp();
 
   // Modal state
@@ -813,18 +870,28 @@ const EnhancedDashboard = React.memo(function EnhancedDashboard() {
   }, [getTodayNutrition, getTodayWorkouts]);
 
   // Handle form submissions
-  const handleNutritionSubmit = (data) => {
-    addNutrition(data);
-    setModalOpen(false);
+  const handleNutritionSubmit = async (data) => {
+    try {
+      await addNutritionAsync(data);
+      setModalOpen(false);
+    } catch (error) {
+      // Error is handled by the context
+      console.error('Failed to add nutrition:', error);
+    }
   };
 
-  const handleWorkoutSubmit = (data) => {
-    addWorkout(data);
-    setModalOpen(false);
+  const handleWorkoutSubmit = async (data) => {
+    try {
+      await addWorkoutAsync(data);
+      setModalOpen(false);
+    } catch (error) {
+      // Error is handled by the context
+      console.error('Failed to add workout:', error);
+    }
   };
 
   return (
-    <div className={styles.page}>
+  <div className={styles.page}>
       <GreetingRow>
         <GreetingText>Welcome back, {user.name}!</GreetingText>
         <StreakBadge>
@@ -901,9 +968,180 @@ const EnhancedDashboard = React.memo(function EnhancedDashboard() {
           </ModalBox>
         </ModalOverlay>
       )}
-    </div>
-  );
+  </div>
+);
 });
+
+// Confirmation Dialog Components
+const ConfirmationOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(26, 26, 46, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 4000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+`;
+
+const ConfirmationDialog = styled.div`
+  background: ${({ theme }) => theme.colors.background.secondary};
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  border: 1px solid ${({ theme }) => theme.colors.border.medium};
+  animation: slideUp 0.3s ease-out;
+  
+  @keyframes slideUp {
+    from { 
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+`;
+
+const ConfirmationTitle = styled.h3`
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text.heading};
+  margin-bottom: 1rem;
+`;
+
+const ConfirmationMessage = styled.p`
+  font-size: 1rem;
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin-bottom: 2rem;
+  line-height: 1.5;
+`;
+
+const ConfirmationButtons = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+`;
+
+const CancelButton = styled.button`
+  background: ${({ theme }) => theme.colors.background.tertiary};
+  color: ${({ theme }) => theme.colors.text.primary};
+  border: 1px solid ${({ theme }) => theme.colors.border.medium};
+  border-radius: 1rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover, &:focus {
+    background: ${({ theme }) => theme.colors.accent.secondary};
+    color: ${({ theme }) => theme.colors.text.heading};
+  }
+`;
+
+const DeleteButton = styled.button`
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+  color: white;
+  border: none;
+  border-radius: 1rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+  
+  &:hover, &:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 107, 107, 0.4);
+  }
+`;
+
+// Loading Spinner Component
+const LoadingSpinner = styled.div`
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+
+const LoadingButton = styled(SubmitButton)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  opacity: 0.8;
+  cursor: not-allowed;
+  
+  &:hover {
+    transform: none;
+    box-shadow: 0 4px 16px rgba(108,99,255,0.3);
+  }
+`;
+
+// Error Message Component
+const ErrorMessage = styled.div`
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.2);
+  animation: slideDown 0.3s ease-out;
+  
+  @keyframes slideDown {
+    from { 
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+// Confirmation Dialog Component
+const ConfirmationDialogComponent = ({ isOpen, onConfirm, onCancel, title, message, confirmText = "Delete", cancelText = "Cancel" }) => {
+  if (!isOpen) return null;
+
+  return (
+    <ConfirmationOverlay>
+      <ConfirmationDialog>
+        <ConfirmationTitle>{title}</ConfirmationTitle>
+        <ConfirmationMessage>{message}</ConfirmationMessage>
+        <ConfirmationButtons>
+          <CancelButton onClick={onCancel}>{cancelText}</CancelButton>
+          <DeleteButton onClick={onConfirm}>{confirmText}</DeleteButton>
+        </ConfirmationButtons>
+      </ConfirmationDialog>
+    </ConfirmationOverlay>
+  );
+};
 
 function AppRoutes() {
   const { user } = useApp();
@@ -958,11 +1196,42 @@ function App() {
   return (
     <AppProvider>
       <ThemeProvider theme={clayTheme}>
-        <Router>
-          <AppRoutes />
-        </Router>
+        <div className={styles.app}>
+          <AppErrorDisplay />
+          <Router>
+            <AppRoutes />
+    </Router>
+        </div>
       </ThemeProvider>
     </AppProvider>
+  );
+}
+
+// Global Error Display Component
+function AppErrorDisplay() {
+  const { error, clearError } = useApp();
+
+  if (!error) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '20px',
+      right: '20px',
+      background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%)',
+      color: 'white',
+      padding: '1rem 1.5rem',
+      borderRadius: '1rem',
+      fontSize: '0.9rem',
+      fontWeight: '600',
+      boxShadow: '0 8px 24px rgba(255, 107, 107, 0.3)',
+      zIndex: 5000,
+      animation: 'slideInRight 0.3s ease-out',
+      cursor: 'pointer',
+      maxWidth: '300px'
+    }} onClick={clearError}>
+      {error} ✕
+    </div>
   );
 }
 
