@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react
 import { ThemeProvider } from 'styled-components';
 import clayTheme from './theme/clayTheme';
 import { Header, StreakDisplay, WorkoutForm, NutritionEntry, ProfileCard } from './components';
+import NutritionHistory from './components/NutritionHistory';
+import ExerciseHistory from './components/ExerciseHistory';
+import { AppProvider, useApp } from './context/AppContext';
 import styles from './App.module.css';
 import styled, { keyframes } from 'styled-components';
 import Footer from './components/Footer';
@@ -15,17 +18,21 @@ const Dashboard = ({ streak }) => (
   </div>
 );
 
-const NutritionHistory = () => (
-  <div className={styles.page}><h2>Nutrition History</h2><p>Placeholder for nutrition history list.</p></div>
-);
-const ExerciseHistory = () => (
-  <div className={styles.page}><h2>Exercise History</h2><p>Placeholder for exercise history list.</p></div>
-);
-const Profile = ({ name, profilePic }) => (
-  <div className={styles.page}>
-    <ProfileCard name={name} profilePic={profilePic} streak={12} joinDate="2023-01-01" weight={68} height={170} />
-  </div>
-);
+const Profile = () => {
+  const { user, currentStreak } = useApp();
+  return (
+    <div className={styles.page}>
+      <ProfileCard 
+        name={user.name} 
+        profilePic={user.profilePic} 
+        streak={currentStreak} 
+        joinDate={user.joinDate} 
+        weight={user.weight} 
+        height={user.height} 
+      />
+    </div>
+  );
+};
 
 // Shimmer animation for icons
 const shimmer = keyframes`
@@ -273,87 +280,341 @@ const ModalOverlay = styled.div`
 const ModalBox = styled.div`
   background: ${({ theme }) => theme.colors.background.secondary};
   border-radius: 1.5rem;
-  box-shadow: 0 8px 32px rgba(108,99,255,0.18);
+  box-shadow: 0 20px 60px rgba(108,99,255,0.25), 0 8px 32px rgba(0,0,0,0.15);
   padding: 2.5rem 2rem 2rem 2rem;
-  min-width: 320px;
-  max-width: 95vw;
+  width: 450px;
+  min-height: 450px;
+  max-height: 550px;
   z-index: 3100;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid ${({ theme }) => theme.colors.border.medium};
+`;
+const ModalContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+`;
+const FormContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+  width: 100%;
+`;
+const FormFields = styled.div`
+  width: 100%;
+  padding: 0 0.5rem;
 `;
 const ModalTabs = styled.div`
   display: flex;
-  gap: 1.2rem;
-  margin-bottom: 2rem;
+  gap: 0.5rem;
+  margin-bottom: 2.5rem;
+  background: ${({ theme }) => theme.colors.background.tertiary};
+  border-radius: 1rem;
+  padding: 0.3rem;
 `;
 const ModalTab = styled.button`
   background: ${({ active, theme }) => active ? theme.colors.gradients.primaryAccent : 'transparent'};
   color: ${({ active, theme }) => active ? theme.colors.text.heading : theme.colors.text.primary};
   border: none;
-  border-radius: 1.2rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  padding: 0.7rem 1.7rem;
+  border-radius: 0.8rem;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.8rem 1.5rem;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s;
+  transition: all 0.2s ease;
+  flex: 1;
+  text-align: center;
   &:hover, &:focus {
-    background: ${({ theme }) => theme.colors.accent.secondary};
+    background: ${({ active, theme }) => active ? theme.colors.gradients.primaryAccent : theme.colors.accent.secondary};
     color: ${({ theme }) => theme.colors.text.heading};
+    transform: ${({ active }) => active ? 'none' : 'translateY(-1px)'};
   }
 `;
 const ModalClose = styled.button`
   position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: ${({ theme }) => theme.colors.gradients.primaryAccent};
-  color: ${({ theme }) => theme.colors.text.heading};
-  border: none;
+  top: 1.2rem;
+  right: 1.2rem;
+  background: ${({ theme }) => theme.colors.background.tertiary};
+  color: ${({ theme }) => theme.colors.text.primary};
+  border: 1px solid ${({ theme }) => theme.colors.border.medium};
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  box-shadow: 0 2px 12px rgba(108,99,255,0.10);
+  width: 32px;
+  height: 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  transition: all 0.2s ease;
   &:hover, &:focus {
     background: ${({ theme }) => theme.colors.accent.secondary};
     color: ${({ theme }) => theme.colors.text.heading};
-    box-shadow: 0 6px 24px rgba(108,99,255,0.18);
+    transform: scale(1.1);
   }
 `;
+const SubmitButton = styled.button`
+  width: 100%;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #6C63FF 0%, #8A83FF 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border: none;
+  cursor: pointer;
+  margin-top: auto;
+  margin: 0 0.5rem;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(108,99,255,0.3);
+  &:hover, &:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(108,99,255,0.4);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+`;
+const FormTitle = styled.div`
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: ${({ theme }) => theme.colors.text.heading};
+  text-align: center;
+`;
+const InputField = styled.input`
+  width: 100%;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 2px solid ${({ theme }) => theme.colors.border.medium};
+  background: ${({ theme }) => theme.colors.background.tertiary};
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.text.secondary};
+    font-weight: 400;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #6C63FF;
+    background: ${({ theme }) => theme.colors.background.secondary};
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+  }
+  
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.accent.primary};
+  }
+`;
+const MacroGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+`;
+const MacroInput = styled(InputField)`
+  margin-bottom: 0;
+  text-align: center;
+  font-size: 0.95rem;
+`;
 
-// --- Quick Add Forms (Stubbed) ---
-const QuickAddNutrition = () => (
-  <div>
-    <div style={{marginBottom: '1rem', fontWeight: 600}}>Add Nutrition Entry</div>
-    <input style={{width: '100%', padding: '0.7rem', borderRadius: '0.7rem', border: '1.5px solid #6C63FF', marginBottom: '1rem'}} placeholder="Meal name" />
-    <input style={{width: '100%', padding: '0.7rem', borderRadius: '0.7rem', border: '1.5px solid #6C63FF', marginBottom: '1rem'}} placeholder="Calories" type="number" />
-    <button style={{width: '100%', padding: '0.9rem', borderRadius: '0.7rem', background: 'linear-gradient(135deg, #6C63FF 0%, #8A83FF 100%)', color: '#fff', fontWeight: 700, border: 'none'}}>Add Nutrition</button>
-  </div>
-);
-const QuickAddStrength = () => (
-  <div>
-    <div style={{marginBottom: '1rem', fontWeight: 600}}>Add Strength Exercise</div>
-    <input style={{width: '100%', padding: '0.7rem', borderRadius: '0.7rem', border: '1.5px solid #6C63FF', marginBottom: '1rem'}} placeholder="Exercise name" />
-    <input style={{width: '100%', padding: '0.7rem', borderRadius: '0.7rem', border: '1.5px solid #6C63FF', marginBottom: '1rem'}} placeholder="Sets" type="number" />
-    <input style={{width: '100%', padding: '0.7rem', borderRadius: '0.7rem', border: '1.5px solid #6C63FF', marginBottom: '1rem'}} placeholder="Reps" type="number" />
-    <input style={{width: '100%', padding: '0.7rem', borderRadius: '0.7rem', border: '1.5px solid #6C63FF', marginBottom: '1rem'}} placeholder="Weight (kg)" type="number" />
-    <button style={{width: '100%', padding: '0.9rem', borderRadius: '0.7rem', background: 'linear-gradient(135deg, #6C63FF 0%, #8A83FF 100%)', color: '#fff', fontWeight: 700, border: 'none'}}>Add Strength</button>
-  </div>
-);
-const QuickAddCardio = () => (
-  <div>
-    <div style={{marginBottom: '1rem', fontWeight: 600}}>Add Cardio Exercise</div>
-    <input style={{width: '100%', padding: '0.7rem', borderRadius: '0.7rem', border: '1.5px solid #6C63FF', marginBottom: '1rem'}} placeholder="Exercise name" />
-    <input style={{width: '100%', padding: '0.7rem', borderRadius: '0.7rem', border: '1.5px solid #6C63FF', marginBottom: '1rem'}} placeholder="Duration (min)" type="number" />
-    <input style={{width: '100%', padding: '0.7rem', borderRadius: '0.7rem', border: '1.5px solid #6C63FF', marginBottom: '1rem'}} placeholder="Distance (km)" type="number" />
-    <button style={{width: '100%', padding: '0.9rem', borderRadius: '0.7rem', background: 'linear-gradient(135deg, #6C63FF 0%, #8A83FF 100%)', color: '#fff', fontWeight: 700, border: 'none'}}>Add Cardio</button>
-  </div>
-);
+// --- Quick Add Forms (Functional) ---
+const QuickAddNutrition = ({ onSubmit }) => {
+  const [meal, setMeal] = useState('');
+  const [calories, setCalories] = useState('');
+  const [protein, setProtein] = useState('');
+  const [carbs, setCarbs] = useState('');
+  const [fat, setFat] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (meal && calories) {
+      onSubmit({ 
+        meal, 
+        calories: parseInt(calories), 
+        protein: protein ? parseInt(protein) : 0,
+        carbs: carbs ? parseInt(carbs) : 0,
+        fat: fat ? parseInt(fat) : 0
+      });
+      setMeal('');
+      setCalories('');
+      setProtein('');
+      setCarbs('');
+      setFat('');
+    }
+  };
+
+  return (
+    <FormContainer>
+      <FormFields>
+        <FormTitle>Add Nutrition Entry</FormTitle>
+        <InputField 
+          placeholder="Meal name" 
+          value={meal}
+          onChange={(e) => setMeal(e.target.value)}
+          required
+        />
+        <InputField 
+          placeholder="Calories" 
+          type="number" 
+          value={calories}
+          onChange={(e) => setCalories(e.target.value)}
+          required
+        />
+        <MacroGrid>
+          <MacroInput 
+            placeholder="Protein (g)" 
+            type="number" 
+            value={protein}
+            onChange={(e) => setProtein(e.target.value)}
+          />
+          <MacroInput 
+            placeholder="Carbs (g)" 
+            type="number" 
+            value={carbs}
+            onChange={(e) => setCarbs(e.target.value)}
+          />
+          <MacroInput 
+            placeholder="Fat (g)" 
+            type="number" 
+            value={fat}
+            onChange={(e) => setFat(e.target.value)}
+          />
+        </MacroGrid>
+      </FormFields>
+      <SubmitButton onClick={handleSubmit}>
+        Add Nutrition
+      </SubmitButton>
+    </FormContainer>
+  );
+};
+
+const QuickAddStrength = ({ onSubmit }) => {
+  const [exercise, setExercise] = useState('');
+  const [sets, setSets] = useState('');
+  const [reps, setReps] = useState('');
+  const [weight, setWeight] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (exercise && sets && reps && weight) {
+      onSubmit({ 
+        exercise, 
+        type: 'strength',
+        sets: parseInt(sets), 
+        reps: parseInt(reps), 
+        weight: parseInt(weight),
+        duration: 0
+      });
+      setExercise('');
+      setSets('');
+      setReps('');
+      setWeight('');
+    }
+  };
+
+  return (
+    <FormContainer>
+      <FormFields>
+        <FormTitle>Add Strength Exercise</FormTitle>
+        <InputField 
+          placeholder="Exercise name" 
+          value={exercise}
+          onChange={(e) => setExercise(e.target.value)}
+          required
+        />
+        <InputField 
+          placeholder="Sets" 
+          type="number" 
+          value={sets}
+          onChange={(e) => setSets(e.target.value)}
+          required
+        />
+        <InputField 
+          placeholder="Reps" 
+          type="number" 
+          value={reps}
+          onChange={(e) => setReps(e.target.value)}
+          required
+        />
+        <InputField 
+          placeholder="Weight (kg)" 
+          type="number" 
+          value={weight}
+          onChange={(e) => setWeight(e.target.value)}
+          required
+        />
+      </FormFields>
+      <SubmitButton onClick={handleSubmit}>
+        Add Strength
+      </SubmitButton>
+    </FormContainer>
+  );
+};
+
+const QuickAddCardio = ({ onSubmit }) => {
+  const [exercise, setExercise] = useState('');
+  const [duration, setDuration] = useState('');
+  const [distance, setDistance] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (exercise && duration) {
+      onSubmit({ 
+        exercise, 
+        type: 'cardio',
+        duration: parseInt(duration), 
+        distance: distance ? parseFloat(distance) : 0
+      });
+      setExercise('');
+      setDuration('');
+      setDistance('');
+    }
+  };
+
+  return (
+    <FormContainer>
+      <FormFields>
+        <FormTitle>Add Cardio Exercise</FormTitle>
+        <InputField 
+          placeholder="Exercise name" 
+          value={exercise}
+          onChange={(e) => setExercise(e.target.value)}
+          required
+        />
+        <InputField 
+          placeholder="Duration (min)" 
+          type="number" 
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+          required
+        />
+        <InputField 
+          placeholder="Distance (km) - optional" 
+          type="number" 
+          step="0.1"
+          value={distance}
+          onChange={(e) => setDistance(e.target.value)}
+        />
+      </FormFields>
+      <SubmitButton onClick={handleSubmit}>
+        Add Cardio
+      </SubmitButton>
+    </FormContainer>
+  );
+};
 
 const ProgressLabel = styled.div`
   margin-top: 0.7rem;
@@ -487,40 +748,101 @@ const ProgressRingsRow = styled.div`
   }
 `;
 
-const EnhancedDashboard = React.memo(function EnhancedDashboard({ streak, userName = "Jane", profilePic = "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane" }) {
+const EnhancedDashboard = React.memo(function EnhancedDashboard() {
+  const { 
+    user, 
+    currentStreak, 
+    goals, 
+    getTodayCalories, 
+    getTodayProtein, 
+    getTodayCarbs,
+    getTodayFat,
+    getTodayWorkoutDuration,
+    getTodayNutrition,
+    getTodayWorkouts,
+    addNutrition,
+    addWorkout
+  } = useApp();
+
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState('nutrition');
-  // Example summary data
-  const nutrition = useMemo(() => ({ calories: 1800, protein: 120, goal: 2200, proteinGoal: 150 }), []);
-  const steps = useMemo(() => ({ value: 7200, goal: 10000 }), []);
-  const workout = useMemo(() => ({ duration: 45, volume: 8000 }), []);
-  const feed = useMemo(() => [
-    { type: 'nutrition', text: 'Breakfast: Oatmeal & Berries (350 kcal)' },
-    { type: 'workout', text: 'Bench Press: 3x10 60kg' },
-    { type: 'nutrition', text: 'Lunch: Chicken Salad (500 kcal)' },
-    { type: 'workout', text: 'Running: 20 min, 3 km' },
-  ], []);
+  
+  // Get real data
+  const todayCalories = getTodayCalories();
+  const todayProtein = getTodayProtein();
+  const todayCarbs = getTodayCarbs();
+  const todayFat = getTodayFat();
+  const todayWorkoutDuration = getTodayWorkoutDuration();
+  
+  // Create activity feed from real data
+  const activityFeed = useMemo(() => {
+    const todayNutrition = getTodayNutrition();
+    const todayWorkouts = getTodayWorkouts();
+    
+    const feed = [];
+    
+    // Add nutrition entries
+    todayNutrition.forEach(entry => {
+      feed.push({
+        type: 'nutrition',
+        text: `${entry.meal}: ${entry.calories} kcal`,
+        time: new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+    });
+    
+    // Add workout entries
+    todayWorkouts.forEach(entry => {
+      if (entry.type === 'strength') {
+        feed.push({
+          type: 'workout',
+          text: `${entry.exercise}: ${entry.sets}x${entry.reps} ${entry.weight}kg`,
+          time: new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+      } else if (entry.type === 'cardio') {
+        feed.push({
+          type: 'workout',
+          text: `${entry.exercise}: ${entry.duration} min, ${entry.distance}km`,
+          time: new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+      }
+    });
+    
+    // Sort by time (most recent first)
+    return feed.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 6);
+  }, [getTodayNutrition, getTodayWorkouts]);
+
+  // Handle form submissions
+  const handleNutritionSubmit = (data) => {
+    addNutrition(data);
+    setModalOpen(false);
+  };
+
+  const handleWorkoutSubmit = (data) => {
+    addWorkout(data);
+    setModalOpen(false);
+  };
+
   return (
     <div className={styles.page}>
       <GreetingRow>
-        <GreetingText>Welcome back, {userName}!</GreetingText>
+        <GreetingText>Welcome back, {user.name}!</GreetingText>
         <StreakBadge>
-          <span role="img" aria-label="fire">🔥</span> {streak} day streak
+          <span role="img" aria-label="fire">🔥</span> {currentStreak} day streak
         </StreakBadge>
       </GreetingRow>
       <ProgressRingsRow>
         <ProgressRing
-          percent={Math.min(100, (nutrition.calories / nutrition.goal) * 100)}
-          label={`Calories: ${nutrition.calories} / ${nutrition.goal}`}
+          percent={Math.min(100, (todayCalories / goals.calories) * 100)}
+          label={`Calories: ${todayCalories} / ${goals.calories}`}
         />
         <ProgressRing
-          percent={Math.min(100, (nutrition.protein / nutrition.proteinGoal) * 100)}
-          label={`Protein: ${nutrition.protein}g / ${nutrition.proteinGoal}g`}
+          percent={Math.min(100, (todayProtein / goals.protein) * 100)}
+          label={`Protein: ${todayProtein}g / ${goals.protein}g`}
         />
         <ProgressRing
-          percent={Math.min(100, (steps.value / steps.goal) * 100)}
-          label={`Steps: ${steps.value} / ${steps.goal}`}
+          percent={Math.min(100, (todayWorkoutDuration / goals.workoutDuration) * 100)}
+          label={`Workout: ${todayWorkoutDuration} / ${goals.workoutDuration} min`}
         />
       </ProgressRingsRow>
       <AddButtonsRow>
@@ -534,21 +856,32 @@ const EnhancedDashboard = React.memo(function EnhancedDashboard({ streak, userNa
       <SummaryCardsRow>
         <SummaryCard>
           <CardTitle>Today's Calories</CardTitle>
-          <CardValue>{nutrition.calories} kcal</CardValue>
-          <div style={{marginTop: '0.5rem', color: '#8A83FF'}}>Protein: {nutrition.protein}g</div>
+          <CardValue>{todayCalories} kcal</CardValue>
+          <div style={{marginTop: '0.5rem', color: '#8A83FF', fontSize: '0.9rem'}}>
+            P: {todayProtein}g • C: {todayCarbs}g • F: {todayFat}g
+          </div>
         </SummaryCard>
         <SummaryCard>
           <CardTitle>Today's Workout</CardTitle>
-          <CardValue>{workout.duration} min</CardValue>
-          <div style={{marginTop: '0.5rem', color: '#8A83FF'}}>Volume: {workout.volume} kg</div>
+          <CardValue>{todayWorkoutDuration} min</CardValue>
+          <div style={{marginTop: '0.5rem', color: '#8A83FF'}}>Goal: {goals.workoutDuration} min</div>
         </SummaryCard>
       </SummaryCardsRow>
       <ActivityFeed>
         <FeedTitle>Recent Activity</FeedTitle>
         <FeedList>
-          {feed.map((item, i) => (
-            <FeedItem key={i}>{item.type === 'nutrition' ? '🍎' : '🏋️'} {item.text}</FeedItem>
-          ))}
+          {activityFeed.length > 0 ? (
+            activityFeed.map((item, i) => (
+              <FeedItem key={i}>
+                {item.type === 'nutrition' ? '🍎' : '🏋️'} {item.text}
+                <span style={{float: 'right', fontSize: '0.9rem', opacity: 0.7}}>{item.time}</span>
+              </FeedItem>
+            ))
+          ) : (
+            <FeedItem style={{textAlign: 'center', opacity: 0.7}}>
+              No activity today. Start by adding nutrition or a workout!
+            </FeedItem>
+          )}
         </FeedList>
       </ActivityFeed>
       {modalOpen && (
@@ -560,9 +893,11 @@ const EnhancedDashboard = React.memo(function EnhancedDashboard({ streak, userNa
               <ModalTab active={modalTab === 'strength'} onClick={() => setModalTab('strength')}>Strength</ModalTab>
               <ModalTab active={modalTab === 'cardio'} onClick={() => setModalTab('cardio')}>Cardio</ModalTab>
             </ModalTabs>
-            {modalTab === 'nutrition' && <QuickAddNutrition />}
-            {modalTab === 'strength' && <QuickAddStrength />}
-            {modalTab === 'cardio' && <QuickAddCardio />}
+            <ModalContent>
+              {modalTab === 'nutrition' && <QuickAddNutrition onSubmit={handleNutritionSubmit} />}
+              {modalTab === 'strength' && <QuickAddStrength onSubmit={handleWorkoutSubmit} />}
+              {modalTab === 'cardio' && <QuickAddCardio onSubmit={handleWorkoutSubmit} />}
+            </ModalContent>
           </ModalBox>
         </ModalOverlay>
       )}
@@ -571,13 +906,10 @@ const EnhancedDashboard = React.memo(function EnhancedDashboard({ streak, userNa
 });
 
 function AppRoutes() {
+  const { user } = useApp();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [menuClosing, setMenuClosing] = React.useState(false);
-  const streak = 12; // Placeholder streak
   const location = useLocation();
-  // User state (could be fetched from API in real app)
-  const [name, setName] = React.useState("Jane Doe");
-  const [profilePic, setProfilePic] = React.useState("https://api.dicebear.com/7.x/avataaars/svg?seed=Jane");
 
   // Handle menu close with animation
   const handleCloseMenu = () => {
@@ -590,7 +922,7 @@ function AppRoutes() {
 
   return (
       <div className={styles.app}>
-      <Header onMenuClick={() => setMenuOpen(m => !m)} profilePic={profilePic} />
+      <Header onMenuClick={() => setMenuOpen(m => !m)} profilePic={user.profilePic} />
       {(menuOpen || menuClosing) && (
         <>
           <Overlay onClick={handleCloseMenu} />
@@ -612,10 +944,10 @@ function AppRoutes() {
           </>
         )}
         <Routes>
-        <Route path="/" element={<EnhancedDashboard streak={streak} />} />
+        <Route path="/" element={<EnhancedDashboard />} />
           <Route path="/nutrition-history" element={<NutritionHistory />} />
           <Route path="/exercise-history" element={<ExerciseHistory />} />
-          <Route path="/profile" element={<Profile name={name} profilePic={profilePic} />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       <Footer />
       </div>
@@ -624,11 +956,13 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ThemeProvider theme={clayTheme}>
-      <Router>
-        <AppRoutes />
-    </Router>
-    </ThemeProvider>
+    <AppProvider>
+      <ThemeProvider theme={clayTheme}>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </ThemeProvider>
+    </AppProvider>
   );
 }
 
