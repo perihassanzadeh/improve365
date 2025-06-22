@@ -1,4 +1,4 @@
-# Improve365
+# Improve365 - coming soon!
 
 A modern React application designed to help you form and maintain healthy habits through consistent tracking, progress visualization, and personalized goal setting.
 
