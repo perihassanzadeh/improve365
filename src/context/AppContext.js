@@ -44,6 +44,9 @@ const ACTIONS = {
 function appReducer(state, action) {
   switch (action.type) {
     case ACTIONS.ADD_NUTRITION:
+      if (!action.payload || !action.payload.meal || !action.payload.calories) {
+        return state; // Ignore invalid entries
+      }
       return {
         ...state,
         nutritionEntries: [
@@ -57,6 +60,9 @@ function appReducer(state, action) {
       };
     
     case ACTIONS.ADD_WORKOUT:
+      if (!action.payload || !action.payload.exercise || (!action.payload.type && action.payload.type !== 0)) {
+        return state; // Ignore invalid entries
+      }
       return {
         ...state,
         workoutEntries: [

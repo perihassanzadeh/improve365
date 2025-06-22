@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { ThemeProvider } from 'styled-components';
 import clayTheme from './theme/clayTheme';
 import { Header, StreakDisplay, WorkoutForm, NutritionEntry, ProfileCard } from './components';
@@ -9,26 +9,38 @@ import { AppProvider, useApp } from './context/AppContext';
 import styles from './App.module.css';
 import styled, { keyframes } from 'styled-components';
 import Footer from './components/Footer';
+import { AuthProvider } from "./context/AuthContext";
+import LoginPage from "./pages/LoginPage";
+import { useAuth } from "./context/AuthContext";
 
-const Dashboard = ({ streak }) => (
-  <div className={styles.page}>
-    <StreakDisplay streak={streak} />
-    <WorkoutForm onSubmit={() => {}} />
-    <NutritionEntry onSubmit={() => {}} />
-  </div>
-);
+const DEFAULT_PROFILE_PIC = "https://api.dicebear.com/9.x/shapes/svg?seed=Christian";
+
+const Dashboard = ({ streak }) => {
+  const { profile } = useAuth();
+  return (
+    <div className={styles.page}>
+      <StreakDisplay streak={streak} />
+      <WorkoutForm onSubmit={() => {}} />
+      <NutritionEntry onSubmit={() => {}} />
+      <div style={{marginTop: '2rem', fontSize: '1.2rem', color: '#8A83FF'}}>
+        Welcome, {profile?.name || "User"}!
+      </div>
+    </div>
+  );
+};
 
 const Profile = () => {
-  const { user, currentStreak } = useApp();
+  const { currentStreak } = useApp();
+  const { profile, user } = useAuth();
   return (
     <div className={styles.page}>
       <ProfileCard 
-        name={user.name} 
-        profilePic={user.profilePic} 
+        name={profile?.name || "User"} 
+        profilePic={profile?.profilePic || user.profilePic || DEFAULT_PROFILE_PIC} 
         streak={currentStreak} 
-        joinDate={user.joinDate} 
-        weight={user.weight} 
-        height={user.height} 
+        joinDate={profile?.joinDate || undefined} 
+        weight={profile?.weight || undefined} 
+        height={profile?.height || undefined} 
       />
     </div>
   );
@@ -437,11 +449,13 @@ const QuickAddNutrition = ({ onSubmit }) => {
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fat, setFat] = useState('');
-  const { loading, error, clearError, addNutritionAsync } = useApp();
+  const [loading, setLoading] = useState(false);
+  const { error, clearError, addNutritionAsync } = useApp();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (meal && calories) {
+      setLoading(true);
       try {
         await addNutritionAsync({ 
           meal, 
@@ -459,12 +473,14 @@ const QuickAddNutrition = ({ onSubmit }) => {
       } catch (error) {
         // Error is handled by the context
         console.error('Failed to add nutrition:', error);
+      } finally {
+        setLoading(false);
       }
     }
   };
 
   return (
-    <FormContainer>
+    <FormContainer as="form" onSubmit={handleSubmit}>
       <FormFields>
         <FormTitle>Add Nutrition Entry</FormTitle>
         {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -513,7 +529,7 @@ const QuickAddNutrition = ({ onSubmit }) => {
           Adding...
         </LoadingButton>
       ) : (
-        <SubmitButton onClick={handleSubmit}>
+        <SubmitButton type="submit">
           Add Nutrition
         </SubmitButton>
       )}
@@ -526,11 +542,13 @@ const QuickAddStrength = ({ onSubmit }) => {
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
   const [weight, setWeight] = useState('');
-  const { loading, error, clearError, addWorkoutAsync } = useApp();
+  const [loading, setLoading] = useState(false);
+  const { error, clearError, addWorkoutAsync } = useApp();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (exercise && sets && reps && weight) {
+      setLoading(true);
       try {
         await addWorkoutAsync({ 
           exercise, 
@@ -548,12 +566,14 @@ const QuickAddStrength = ({ onSubmit }) => {
       } catch (error) {
         // Error is handled by the context
         console.error('Failed to add strength workout:', error);
+      } finally {
+        setLoading(false);
       }
     }
   };
 
   return (
-    <FormContainer>
+    <FormContainer as="form" onSubmit={handleSubmit}>
       <FormFields>
         <FormTitle>Add Strength Exercise</FormTitle>
         {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -595,7 +615,7 @@ const QuickAddStrength = ({ onSubmit }) => {
           Adding...
         </LoadingButton>
       ) : (
-        <SubmitButton onClick={handleSubmit}>
+        <SubmitButton type="submit">
           Add Strength
         </SubmitButton>
       )}
@@ -607,11 +627,13 @@ const QuickAddCardio = ({ onSubmit }) => {
   const [exercise, setExercise] = useState('');
   const [duration, setDuration] = useState('');
   const [distance, setDistance] = useState('');
-  const { loading, error, clearError, addWorkoutAsync } = useApp();
+  const [loading, setLoading] = useState(false);
+  const { error, clearError, addWorkoutAsync } = useApp();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (exercise && duration) {
+      setLoading(true);
       try {
         await addWorkoutAsync({ 
           exercise, 
@@ -626,12 +648,14 @@ const QuickAddCardio = ({ onSubmit }) => {
       } catch (error) {
         // Error is handled by the context
         console.error('Failed to add cardio workout:', error);
+      } finally {
+        setLoading(false);
       }
     }
   };
 
   return (
-    <FormContainer>
+    <FormContainer as="form" onSubmit={handleSubmit}>
       <FormFields>
         <FormTitle>Add Cardio Exercise</FormTitle>
         {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -665,7 +689,7 @@ const QuickAddCardio = ({ onSubmit }) => {
           Adding...
         </LoadingButton>
       ) : (
-        <SubmitButton onClick={handleSubmit}>
+        <SubmitButton type="submit">
           Add Cardio
         </SubmitButton>
       )}
@@ -806,8 +830,8 @@ const ProgressRingsRow = styled.div`
 `;
 
 const EnhancedDashboard = React.memo(function EnhancedDashboard() {
+  const { profile } = useAuth();
   const {
-    user,
     currentStreak,
     goals,
     getTodayCalories,
@@ -891,9 +915,9 @@ const EnhancedDashboard = React.memo(function EnhancedDashboard() {
   };
 
   return (
-  <div className={styles.page}>
+    <div className={styles.page}>
       <GreetingRow>
-        <GreetingText>Welcome back, {user.name}!</GreetingText>
+        <GreetingText>Welcome back, {profile?.name || "User"}!</GreetingText>
         <StreakBadge>
           <span role="img" aria-label="fire">🔥</span> {currentStreak} day streak
         </StreakBadge>
@@ -968,8 +992,8 @@ const EnhancedDashboard = React.memo(function EnhancedDashboard() {
           </ModalBox>
         </ModalOverlay>
       )}
-  </div>
-);
+    </div>
+  );
 });
 
 // Confirmation Dialog Components
@@ -1143,13 +1167,11 @@ const ConfirmationDialogComponent = ({ isOpen, onConfirm, onCancel, title, messa
   );
 };
 
-function AppRoutes() {
-  const { user } = useApp();
+function MainLayout({ children }) {
+  const { user, profile } = useAuth();
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [menuClosing, setMenuClosing] = React.useState(false);
-  const location = useLocation();
 
-  // Handle menu close with animation
   const handleCloseMenu = () => {
     setMenuClosing(true);
     setTimeout(() => {
@@ -1159,51 +1181,104 @@ function AppRoutes() {
   };
 
   return (
-      <div className={styles.app}>
-      <Header onMenuClick={() => setMenuOpen(m => !m)} profilePic={user.profilePic} />
+    <>
+      <Header
+        onMenuClick={() => setMenuOpen(true)}
+        profilePic={profile?.profilePic || user?.profilePic || DEFAULT_PROFILE_PIC}
+      />
       {(menuOpen || menuClosing) && (
         <>
           <Overlay onClick={handleCloseMenu} />
           <Menu $closing={menuClosing}>
             <CloseButton aria-label="Close menu" onClick={handleCloseMenu}>&times;</CloseButton>
-            <MenuItem to="/" onClick={handleCloseMenu} $active={location.pathname === "/"}>
+            <MenuItem to="/" onClick={handleCloseMenu}>
               <AnimatedIcon delay="0s"><HomeIcon /></AnimatedIcon> Home
             </MenuItem>
-            <MenuItem to="/nutrition-history" onClick={handleCloseMenu} $active={location.pathname === "/nutrition-history"}>
+            <MenuItem to="/nutrition-history" onClick={handleCloseMenu}>
               <AnimatedIcon delay="0.3s"><NutritionIcon /></AnimatedIcon> Nutrition History
             </MenuItem>
-            <MenuItem to="/exercise-history" onClick={handleCloseMenu} $active={location.pathname === "/exercise-history"}>
+            <MenuItem to="/exercise-history" onClick={handleCloseMenu}>
               <AnimatedIcon delay="0.6s"><ExerciseIcon /></AnimatedIcon> Exercise History
             </MenuItem>
-            <MenuItem to="/profile" onClick={handleCloseMenu} $active={location.pathname === "/profile"}>
+            <MenuItem to="/profile" onClick={handleCloseMenu}>
               <AnimatedIcon delay="0.9s"><ProfileIcon /></AnimatedIcon> Profile
             </MenuItem>
           </Menu>
-          </>
-        )}
-        <Routes>
-        <Route path="/" element={<EnhancedDashboard />} />
-          <Route path="/nutrition-history" element={<NutritionHistory />} />
-          <Route path="/exercise-history" element={<ExerciseHistory />} />
-          <Route path="/profile" element={<Profile />} />
-        </Routes>
+        </>
+      )}
+      {children}
       <Footer />
-      </div>
+    </>
+  );
+}
+
+function AppRoutes() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div style={{textAlign: 'center', marginTop: '4rem', color: '#8A83FF'}}>Loading...</div>;
+
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      {/* Protected routes */}
+      <Route
+        path="/"
+        element={user ? (
+          <MainLayout>
+            <EnhancedDashboard />
+          </MainLayout>
+        ) : (
+          <Navigate to="/login" replace />
+        )}
+      />
+      <Route
+        path="/nutrition-history"
+        element={user ? (
+          <MainLayout>
+            <NutritionHistory />
+          </MainLayout>
+        ) : (
+          <Navigate to="/login" replace />
+        )}
+      />
+      <Route
+        path="/exercise-history"
+        element={user ? (
+          <MainLayout>
+            <ExerciseHistory />
+          </MainLayout>
+        ) : (
+          <Navigate to="/login" replace />
+        )}
+      />
+      <Route
+        path="/profile"
+        element={user ? (
+          <MainLayout>
+            <Profile />
+          </MainLayout>
+        ) : (
+          <Navigate to="/login" replace />
+        )}
+      />
+    </Routes>
   );
 }
 
 function App() {
   return (
-    <AppProvider>
-      <ThemeProvider theme={clayTheme}>
-        <div className={styles.app}>
-          <AppErrorDisplay />
-          <Router>
-            <AppRoutes />
-    </Router>
-        </div>
-      </ThemeProvider>
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <ThemeProvider theme={clayTheme}>
+          <div className={styles.app}>
+            <AppErrorDisplay />
+            <Router>
+              <AppRoutes />
+            </Router>
+          </div>
+        </ThemeProvider>
+      </AppProvider>
+    </AuthProvider>
   );
 }
 
@@ -1231,7 +1306,7 @@ function AppErrorDisplay() {
       maxWidth: '300px'
     }} onClick={clearError}>
       {error} ✕
-    </div>
+      </div>
   );
 }
 

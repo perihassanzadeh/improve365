@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 
@@ -96,7 +98,55 @@ const ProfilePic = styled.img`
   }
 `;
 
-const Header = ({ onMenuClick, profilePic }) => {
+const ProfileMenu = styled.div`
+  position: absolute;
+  top: 60px;
+  right: 0;
+  background: ${({ theme }) => theme.colors.background.secondary || "#2B2B4A"};
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(108,99,255,0.18);
+  min-width: 160px;
+  z-index: 3001;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ProfileMenuItem = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.text.primary || "#E0E0FF"};
+  padding: 0.9rem 1.5rem;
+  text-align: left;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.18s;
+  &:hover, &:focus {
+    background: ${({ theme }) => theme.colors.background.tertiary || "#3D3D60"};
+    color: ${({ theme }) => theme.colors.text.heading || "#fff"};
+  }
+`;
+
+export default function Header({ onMenuClick, profilePic, hideProfilePic }) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef();
+
+  // Close menu on click outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
   return (
     <HeaderBar>
       <LeftSection>
@@ -107,12 +157,38 @@ const Header = ({ onMenuClick, profilePic }) => {
       </LeftSection>
       
       <RightSection>
-        <Link to="/profile" tabIndex={-1} style={{ display: 'flex', alignItems: 'center' }}>
-          <ProfilePic src={profilePic} alt="Profile" />
-        </Link>
+        {!hideProfilePic && (
+          <div style={{ position: "relative" }} ref={menuRef}>
+            <img
+              src={profilePic}
+              alt="Profile"
+              style={{ cursor: "pointer", borderRadius: "50%", width: 48, height: 48 }}
+              onClick={() => setMenuOpen((open) => !open)}
+              tabIndex={0}
+            />
+            {menuOpen && (
+              <ProfileMenu>
+                <ProfileMenuItem
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate("/profile");
+                  }}
+                >
+                  Profile
+                </ProfileMenuItem>
+                <ProfileMenuItem
+                  onClick={() => {
+                    setMenuOpen(false);
+                    logout();
+                  }}
+                >
+                  Log out
+                </ProfileMenuItem>
+              </ProfileMenu>
+            )}
+          </div>
+        )}
       </RightSection>
     </HeaderBar>
   );
-};
-
-export default Header; 
+} 
