@@ -29,20 +29,36 @@ export function AuthProvider({ children }) {
           setUser(firebaseUser);
           if (firebaseUser) {
             const docRef = doc(db, "users", firebaseUser.uid);
-            const docSnap = await getDoc(docRef);
-            let profileData = docSnap.exists() ? docSnap.data() : {};
-            // If name is missing, update from displayName or email
-            if (!profileData.name) {
-              const name = firebaseUser.displayName || firebaseUser.email.split('@')[0] || "User";
-              await setDoc(docRef, { ...profileData, name }, { merge: true });
-              profileData = { ...profileData, name };
+            try {
+              const docSnap = await getDoc(docRef);
+              let profileData = docSnap.exists() ? docSnap.data() : {};
+              let bestName = profileData.name;
+
+              // If Firestore name is missing, empty, or 'User', try to get a better name
+              if (!bestName || bestName === "User") {
+                const displayName = firebaseUser.displayName;
+                const emailName = firebaseUser.email ? firebaseUser.email.split('@')[0] : "User";
+                // Prefer displayName if it's not 'User' or empty
+                if (displayName && displayName !== "User") {
+                  bestName = displayName;
+                } else if (emailName && emailName !== "User") {
+                  bestName = emailName;
+                } else {
+                  bestName = "User";
+                }
+                // Patch Firestore if we have a better name than what's stored
+                if (bestName !== profileData.name) {
+                  await setDoc(docRef, { ...profileData, name: bestName }, { merge: true });
+                  profileData = { ...profileData, name: bestName };
+                }
+              }
+
+              setProfile(profileData);
+              console.log("Profile loaded:", profileData);
+            } catch (error) {
+              setProfile((prev) => prev || { name: firebaseUser.displayName || firebaseUser.email.split('@')[0] || "User" });
+              console.error("Failed to fetch user profile from Firestore:", error);
             }
-            if (!profileData.joinDate) {
-              const joinDate = new Date(firebaseUser.metadata.creationTime).toISOString();
-              await setDoc(docRef, { ...profileData, joinDate }, { merge: true });
-              profileData = { ...profileData, joinDate };
-            }
-            setProfile(profileData);
           } else {
             setProfile(null);
           }
@@ -70,13 +86,15 @@ export function AuthProvider({ children }) {
     // Save profile to Firestore with joinDate
     const joinDate = new Date().toISOString();
     await setDoc(doc(db, "users", cred.user.uid), { name, email, joinDate });
-    // Fetch the profile from Firestore to ensure it's loaded
+    // Force reload of the user to get the updated displayName
+    await cred.user.reload();
+    // Fetch the profile from Firestore to ensure it's loaded and up to date
     const docRef = doc(db, "users", cred.user.uid);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       setProfile(docSnap.data());
     } else {
-      setProfile({ name, email, joinDate }); // fallback
+      setProfile({ name, email, joinDate });
     }
   };
   const logout = () => signOut(auth);
