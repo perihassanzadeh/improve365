@@ -18,10 +18,10 @@ const DEFAULT_PROFILE_PIC = "https://api.dicebear.com/9.x/shapes/svg?seed=Christ
 const Dashboard = ({ streak }) => {
   const { profile } = useAuth();
   return (
-  <div className={styles.page}>
-    <StreakDisplay streak={streak} />
-    <WorkoutForm onSubmit={() => {}} />
-    <NutritionEntry onSubmit={() => {}} />
+    <div className={styles.page}>
+      <StreakDisplay streak={streak} />
+      <WorkoutForm onSubmit={() => {}} />
+      <NutritionEntry onSubmit={() => {}} />
       <div style={{marginTop: '2rem', fontSize: '1.2rem', color: '#8A83FF'}}>
         Welcome, {profile?.name || "User"}!
       </div>
@@ -36,13 +36,13 @@ const Profile = () => {
     <div className={styles.page}>
       <ProfileCard 
         name={profile?.name || "User"} 
-        profilePic={profile?.profilePic || user.profilePic || DEFAULT_PROFILE_PIC} 
+        profilePic={profile?.profilePic || user?.profilePic || DEFAULT_PROFILE_PIC} 
         streak={currentStreak} 
         joinDate={profile?.joinDate || undefined} 
         weight={profile?.weight || undefined} 
         height={profile?.height || undefined} 
       />
-  </div>
+    </div>
   );
 };
 

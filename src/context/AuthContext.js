@@ -6,7 +6,8 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   setPersistence,
-  browserSessionPersistence
+  browserSessionPersistence,
+  updateProfile
 } from "firebase/auth";
 import app from "../firebase";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
@@ -27,14 +28,21 @@ export function AuthProvider({ children }) {
         unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
           setUser(firebaseUser);
           if (firebaseUser) {
-            // Fetch profile from Firestore
             const docRef = doc(db, "users", firebaseUser.uid);
             const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-              setProfile(docSnap.data());
-            } else {
-              setProfile(null);
+            let profileData = docSnap.exists() ? docSnap.data() : {};
+            // If name is missing, update from displayName or email
+            if (!profileData.name) {
+              const name = firebaseUser.displayName || firebaseUser.email.split('@')[0] || "User";
+              await setDoc(docRef, { ...profileData, name }, { merge: true });
+              profileData = { ...profileData, name };
             }
+            if (!profileData.joinDate) {
+              const joinDate = new Date(firebaseUser.metadata.creationTime).toISOString();
+              await setDoc(docRef, { ...profileData, joinDate }, { merge: true });
+              profileData = { ...profileData, joinDate };
+            }
+            setProfile(profileData);
           } else {
             setProfile(null);
           }
@@ -57,15 +65,18 @@ export function AuthProvider({ children }) {
   const login = (email, password) => signInWithEmailAndPassword(auth, email, password);
   const signup = async (email, password, name) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    // Save profile to Firestore
-    await setDoc(doc(db, "users", cred.user.uid), { name, email });
+    // Set displayName in Firebase Auth
+    await updateProfile(cred.user, { displayName: name });
+    // Save profile to Firestore with joinDate
+    const joinDate = new Date().toISOString();
+    await setDoc(doc(db, "users", cred.user.uid), { name, email, joinDate });
     // Fetch the profile from Firestore to ensure it's loaded
     const docRef = doc(db, "users", cred.user.uid);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       setProfile(docSnap.data());
     } else {
-      setProfile({ name, email }); // fallback
+      setProfile({ name, email, joinDate }); // fallback
     }
   };
   const logout = () => signOut(auth);

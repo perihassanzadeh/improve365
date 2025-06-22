@@ -77,12 +77,24 @@ const Metric = styled.div`
   }
 `;
 
+const formatJoinDate = (joinDate) => {
+  if (!joinDate) return "Joined: Unknown";
+  try {
+    const date = new Date(joinDate);
+    if (isNaN(date.getTime())) return "Joined: Unknown";
+    const options = { year: 'numeric', month: 'long' };
+    return `Joined: ${date.toLocaleDateString(undefined, options)}`;
+  } catch {
+    return "Joined: Unknown";
+  }
+};
+
 const ProfileCard = ({ name, profilePic, streak, joinDate, weight, height }) => {
   return (
     <Card>
       <ProfilePic src={profilePic} alt={name} />
       <Name>{name}</Name>
-      <Meta>Joined: {joinDate}</Meta>
+      <Meta>{formatJoinDate(joinDate)}</Meta>
       <Metrics>
         <Metric><span>{streak}</span> day streak</Metric>
         <Metric><span>{weight}</span> kg</Metric>

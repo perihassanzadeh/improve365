@@ -153,7 +153,9 @@ export default function Header({ onMenuClick, profilePic, hideProfilePic }) {
         <MenuButton aria-label="Open menu" onClick={onMenuClick}>
           ☰
         </MenuButton>
-        <Logo>Improve365</Logo>
+        <Link to="/" style={{ textDecoration: 'none' }}>
+          <Logo>Improve365</Logo>
+        </Link>
       </LeftSection>
       
       <RightSection>

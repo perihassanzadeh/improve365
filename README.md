@@ -13,6 +13,13 @@ Improve365 is your personal habit formation companion that makes building health
 - Track daily progress with intuitive check-in system
 - Set realistic goals and milestones for each habit
 - Visual progress indicators to stay motivated
+- **Quick-add modals for Nutrition, Strength, and Cardio**: Log workouts and meals efficiently with consistent, user-friendly forms
+
+### 👤 **User Authentication & Personalization**
+- Secure sign up, login, and logout with Firebase Authentication
+- Session-based login: users are logged out when the browser/tab is closed for enhanced security
+- Personalized dashboard and profile
+- View your streak, join date, and personal metrics (weight, height, etc.)
 
 ### 📊 **Progress Analytics**
 - Comprehensive dashboard showing habit completion rates
@@ -106,3 +113,4 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 - [Create React App](https://github.com/facebook/create-react-app)
 - React community
 - All users committed to building better habits
+
