@@ -18,10 +18,10 @@ const DEFAULT_PROFILE_PIC = "https://api.dicebear.com/9.x/shapes/svg?seed=Christ
 const Dashboard = ({ streak }) => {
   const { profile } = useAuth();
   return (
-    <div className={styles.page}>
-      <StreakDisplay streak={streak} />
-      <WorkoutForm onSubmit={() => {}} />
-      <NutritionEntry onSubmit={() => {}} />
+  <div className={styles.page}>
+    <StreakDisplay streak={streak} />
+    <WorkoutForm onSubmit={() => {}} />
+    <NutritionEntry onSubmit={() => {}} />
       <div style={{marginTop: '2rem', fontSize: '1.2rem', color: '#8A83FF'}}>
         Welcome, {profile?.name || "User"}!
       </div>
@@ -42,7 +42,7 @@ const Profile = () => {
         weight={profile?.weight || undefined} 
         height={profile?.height || undefined} 
       />
-    </div>
+  </div>
   );
 };
 
@@ -812,8 +812,8 @@ const ProgressRing = React.memo(function ProgressRing({ percent = 0, label = "" 
         </text>
       </svg>
       <ProgressLabel>{label}</ProgressLabel>
-    </div>
-  );
+  </div>
+);
 });
 
 // --- Enhanced Dashboard ---
@@ -1261,7 +1261,7 @@ function AppRoutes() {
           <Navigate to="/login" replace />
         )}
       />
-    </Routes>
+        </Routes>
   );
 }
 

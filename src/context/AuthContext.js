@@ -22,13 +22,9 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let unsubscribe;
-    let didSetListener = false;
-    console.log("Setting Firebase session persistence...");
     setPersistence(auth, browserSessionPersistence)
       .then(() => {
-        console.log("Persistence set. Setting up onAuthStateChanged listener...");
         unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-          console.log("Auth state changed:", firebaseUser);
           setUser(firebaseUser);
           if (firebaseUser) {
             // Fetch profile from Firestore
@@ -44,33 +40,15 @@ export function AuthProvider({ children }) {
           }
           setLoading(false);
         });
-        didSetListener = true;
       })
       .catch((error) => {
         setUser(null);
         setProfile(null);
         setLoading(false);
-        signOut(auth); // force sign out on error
+        // Optionally: signOut(auth);
         console.error("Failed to set persistence:", error);
       });
-
-    // Fallback: if listener is never set, stop loading after 5 seconds
-    const timeout = setTimeout(() => {
-      if (!didSetListener) {
-        setLoading(false);
-        console.error("Auth listener was never set. Possible Firebase config or network issue.");
-      }
-    }, 5000);
-
-    // Final fallback: always clear loading after 10 seconds
-    const hardTimeout = setTimeout(() => {
-      setLoading(false);
-      console.error("Auth loading timed out after 10 seconds.");
-    }, 10000);
-
     return () => {
-      clearTimeout(timeout);
-      clearTimeout(hardTimeout);
       if (unsubscribe) unsubscribe();
     };
   }, []);
